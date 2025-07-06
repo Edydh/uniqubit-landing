@@ -43,6 +43,31 @@ A modern, premium landing page for uniQubit software development agency featurin
 └── tsconfig.json         # TypeScript configuration
 ```
 
+## 📋 Project Roadmap
+
+This project follows a comprehensive transformation plan from landing page to full platform:
+
+### ✅ **Phases 1-3: Landing Page (COMPLETED)**
+- Modern glassmorphism design with dark theme
+- Fully functional contact form with validation
+- Responsive design and advanced animations
+- SEO optimization and accessibility
+- Production-ready deployment
+
+### 🚧 **Phases 4-8: Platform Development (NEXT)**
+- Supabase integration and authentication
+- Admin dashboard with lead/project management
+- Client portal and communication features
+- Real-time updates and file management
+- Payment integration and analytics
+
+### 📖 Documentation
+- **[MASTER_ACTION_PLAN.md](./MASTER_ACTION_PLAN.md)** - Complete project transformation plan
+- **[ACTION_PLAN.md](./ACTION_PLAN.md)** - Original landing page development plan
+- **[PLATFORM_ACTION_PLAN.md](./PLATFORM_ACTION_PLAN.md)** - Detailed platform expansion plan
+
+### Current Status: **Landing Page Complete (98%) → Platform Development Ready**
+
 ## 🎯 Key Features
 
 ### ✅ **Complete Components**
