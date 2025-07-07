@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import Link from 'next/link';
 
 export default function Navigation() {
   const [isOpen, setIsOpen] = useState(false);
@@ -55,7 +56,7 @@ export default function Navigation() {
           </motion.div>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex space-x-8">
+          <div className="hidden md:flex items-center space-x-8">
             {navItems.map((item) => (
               <motion.button
                 key={item.name}
@@ -69,6 +70,30 @@ export default function Navigation() {
                 />
               </motion.button>
             ))}
+            
+            {/* Auth Buttons */}
+            <div className="flex items-center space-x-4 ml-8">
+              <Link href="/login">
+                <motion.button
+                  className="text-gray-300 hover:text-neon transition-colors duration-300 relative group"
+                  whileHover={{ y: -2 }}
+                >
+                  Login
+                  <motion.div
+                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-neon scale-x-0 group-hover:scale-x-100 transition-transform duration-300"
+                  />
+                </motion.button>
+              </Link>
+              <Link href="/register">
+                <motion.button
+                  className="px-6 py-2 bg-gradient-to-r from-neon to-purple-400 text-black font-semibold rounded-lg hover:shadow-neon transition-all duration-300"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  Sign Up
+                </motion.button>
+              </Link>
+            </div>
           </div>
 
           {/* Mobile Menu Button */}
@@ -126,6 +151,35 @@ export default function Navigation() {
                     {item.name}
                   </motion.button>
                 ))}
+                
+                {/* Mobile Auth Buttons */}
+                <div className="border-t border-white/10 mt-4 pt-4 px-6 space-y-3">
+                  <Link href="/login">
+                    <motion.button
+                      className="block w-full text-left text-gray-300 hover:text-neon hover:bg-white/5 transition-all duration-300 py-2"
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: navItems.length * 0.1 }}
+                      whileHover={{ x: 10 }}
+                      onClick={() => setIsOpen(false)}
+                    >
+                      Login
+                    </motion.button>
+                  </Link>
+                  <Link href="/register">
+                    <motion.button
+                      className="block w-full px-4 py-2 bg-gradient-to-r from-neon to-purple-400 text-black font-semibold rounded-lg hover:shadow-neon transition-all duration-300 text-center"
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: (navItems.length + 1) * 0.1 }}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => setIsOpen(false)}
+                    >
+                      Sign Up
+                    </motion.button>
+                  </Link>
+                </div>
               </div>
             </motion.div>
           )}

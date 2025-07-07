@@ -9,6 +9,7 @@ import * as z from 'zod';
 const contactSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
   email: z.string().email('Please enter a valid email address'),
+  company: z.string().optional(),
   message: z.string().min(10, 'Message must be at least 10 characters'),
 });
 
@@ -30,12 +31,24 @@ export default function ContactForm() {
   const onSubmit = async (data: ContactFormData) => {
     setIsSubmitting(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      console.log('Form submitted:', data);
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to send message');
+      }
+
+      console.log('Form submitted successfully:', data);
       setSubmitStatus('success');
       reset();
     } catch (error) {
+      console.error('Error submitting form:', error);
       setSubmitStatus('error');
     } finally {
       setIsSubmitting(false);
@@ -100,6 +113,22 @@ export default function ContactForm() {
                   <p className="mt-1 text-sm text-red-400">{errors.email.message}</p>
                 )}
               </div>
+            </div>
+
+            <div>
+              <label htmlFor="company" className="block text-sm font-medium text-gray-300 mb-2">
+                Company <span className="text-gray-500">(optional)</span>
+              </label>
+              <input
+                {...register('company')}
+                type="text"
+                id="company"
+                className="w-full px-4 py-3 bg-black/50 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-neon focus:ring-1 focus:ring-neon transition-all duration-300"
+                placeholder="Enter your company name"
+              />
+              {errors.company && (
+                <p className="mt-1 text-sm text-red-400">{errors.company.message}</p>
+              )}
             </div>
 
             <div>
