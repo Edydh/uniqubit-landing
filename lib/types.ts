@@ -194,3 +194,44 @@ export interface AuthContextType {
   logout: () => Promise<void>;
   updateProfile: (data: Partial<User>) => Promise<{ error?: string }>;
 }
+
+// AI-Enhanced Lead Management
+export interface EnhancedLead extends Lead {
+  ai_score?: number;
+  ai_priority?: 'high' | 'medium' | 'low';
+  ai_project_type?: string;
+  ai_budget_estimate?: string;
+  ai_urgency?: string;
+  ai_complexity?: string;
+  ai_analysis?: any;
+  ai_response_sent?: boolean;
+  ai_response_content?: string;
+  phone?: string;
+  project_type?: string;
+  source?: string;
+}
+
+// AI Communications Log
+export interface AICommunication {
+  id: string;
+  lead_id?: string;
+  project_id?: string;
+  communication_type: string;
+  prompt_used?: string;
+  ai_response: string;
+  human_approved?: boolean;
+  sent_at?: string;
+  created_at: string;
+}
+
+// AI Project Insights
+export interface AIProjectInsight {
+  id: string;
+  project_id: string;
+  insight_type: string;
+  content: string;
+  confidence_score?: number;
+  data_sources?: any;
+  created_at: string;
+  updated_at: string;
+}

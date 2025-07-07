@@ -1,50 +1,120 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import { enhancedContactSchema } from '@/lib/security/spamDetection';
+import { PhoneInput } from './PhoneInput';
 
-const contactSchema = z.object({
-  name: z.string().min(2, 'Name must be at least 2 characters'),
-  email: z.string().email('Please enter a valid email address'),
-  company: z.string().optional(),
-  message: z.string().min(10, 'Message must be at least 10 characters'),
-});
+type ContactFormData = z.infer<typeof enhancedContactSchema>;
 
-type ContactFormData = z.infer<typeof contactSchema>;
+// Declare Turnstile for TypeScript
+declare global {
+  interface Window {
+    turnstile: {
+      render: (element: string | HTMLElement, options: any) => string;
+      reset: (widgetId?: string) => void;
+      remove: (widgetId?: string) => void;
+    };
+  }
+}
 
 export default function ContactForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [turnstileToken, setTurnstileToken] = useState<string>('');
+  const [turnstileWidgetId, setTurnstileWidgetId] = useState<string>('');
+  const [rateLimitError, setRateLimitError] = useState<string>('');
 
   const {
     register,
     handleSubmit,
     formState: { errors },
     reset,
+    control,
   } = useForm<ContactFormData>({
-    resolver: zodResolver(contactSchema),
+    resolver: zodResolver(enhancedContactSchema),
   });
+
+  // Load Turnstile script and initialize
+  useEffect(() => {
+    const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
+    if (!siteKey) return; // CAPTCHA not configured
+
+    const script = document.createElement('script');
+    script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
+    script.async = true;
+    script.defer = true;
+    script.onload = () => {
+      if (window.turnstile) {
+        const widgetId = window.turnstile.render('#turnstile-widget', {
+          sitekey: siteKey,
+          callback: (token: string) => {
+            setTurnstileToken(token);
+          },
+          'error-callback': () => {
+            setTurnstileToken('');
+            console.error('Turnstile error occurred');
+          },
+          'expired-callback': () => {
+            setTurnstileToken('');
+          },
+          theme: 'light',
+          size: 'normal',
+        });
+        setTurnstileWidgetId(widgetId);
+      }
+    };
+    document.head.appendChild(script);
+
+    return () => {
+      if (turnstileWidgetId && window.turnstile) {
+        window.turnstile.remove(turnstileWidgetId);
+      }
+      document.head.removeChild(script);
+    };
+  }, []);
 
   const onSubmit = async (data: ContactFormData) => {
     setIsSubmitting(true);
+    setRateLimitError('');
+    
     try {
-      const response = await fetch('/api/contact', {
+      // Check if CAPTCHA is required and present
+      const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
+      if (siteKey && !turnstileToken) {
+        throw new Error('Please complete the security verification');
+      }
+
+      // Use the AI-enhanced contact endpoint with security
+      const response = await fetch('/api/contact-ai', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify({
+          ...data,
+          turnstileToken: turnstileToken || undefined,
+        }),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
+        
+        // Handle rate limiting specifically
+        if (response.status === 429) {
+          const retryAfter = errorData.retryAfter || 900; // Default 15 minutes
+          setRateLimitError(`Too many requests. Please try again in ${Math.ceil(retryAfter / 60)} minutes.`);
+          throw new Error(errorData.error);
+        }
+        
         throw new Error(errorData.error || 'Failed to send message');
       }
 
-      console.log('Form submitted successfully:', data);
+      const result = await response.json();
+      console.log('AI Contact form submitted successfully:', result);
       setSubmitStatus('success');
       reset();
     } catch (error) {
@@ -115,19 +185,72 @@ export default function ContactForm() {
               </div>
             </div>
 
+            <div className="grid md:grid-cols-2 gap-6">
+              <div>
+                <label htmlFor="company" className="block text-sm font-medium text-gray-300 mb-2">
+                  Company <span className="text-gray-500">(optional)</span>
+                </label>
+                <input
+                  {...register('company')}
+                  type="text"
+                  id="company"
+                  className="w-full px-4 py-3 bg-black/50 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-neon focus:ring-1 focus:ring-neon transition-all duration-300"
+                  placeholder="Enter your company name"
+                />
+                {errors.company && (
+                  <p className="mt-1 text-sm text-red-400">{errors.company.message}</p>
+                )}
+              </div>
+
+              <div>
+                <label htmlFor="phone" className="block text-sm font-medium text-gray-300 mb-2">
+                  Phone <span className="text-gray-500">(optional)</span>
+                </label>
+                <Controller
+                  name="phone"
+                  control={control}
+                  render={({ field }) => (
+                    <PhoneInput
+                      {...field}
+                      id="phone"
+                      placeholder="Your phone number"
+                      defaultCountry="US"
+                      formatAsYouType={true}
+                      showCountryCode={true}
+                      className="w-full px-4 py-3 bg-black/50 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-neon focus:ring-1 focus:ring-neon transition-all duration-300"
+                      errorClassName="text-red-400"
+                      onChange={(value, isValid) => {
+                        field.onChange(value);
+                      }}
+                    />
+                  )}
+                />
+                {errors.phone && (
+                  <p className="mt-1 text-sm text-red-400">{errors.phone.message}</p>
+                )}
+              </div>
+            </div>
+
             <div>
-              <label htmlFor="company" className="block text-sm font-medium text-gray-300 mb-2">
-                Company <span className="text-gray-500">(optional)</span>
+              <label htmlFor="projectType" className="block text-sm font-medium text-gray-300 mb-2">
+                Project Type
               </label>
-              <input
-                {...register('company')}
-                type="text"
-                id="company"
-                className="w-full px-4 py-3 bg-black/50 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-neon focus:ring-1 focus:ring-neon transition-all duration-300"
-                placeholder="Enter your company name"
-              />
-              {errors.company && (
-                <p className="mt-1 text-sm text-red-400">{errors.company.message}</p>
+              <select
+                {...register('projectType')}
+                id="projectType"
+                className="w-full px-4 py-3 bg-black/50 border border-white/20 rounded-xl text-white focus:outline-none focus:border-neon focus:ring-1 focus:ring-neon transition-all duration-300"
+              >
+                <option value="">Select a project type</option>
+                <option value="web-development">Web Development</option>
+                <option value="mobile-app">Mobile App Development</option>
+                <option value="e-commerce">E-commerce Solution</option>
+                <option value="custom-software">Custom Software</option>
+                <option value="consultation">Consultation</option>
+                <option value="maintenance">Maintenance & Support</option>
+                <option value="other">Other</option>
+              </select>
+              {errors.projectType && (
+                <p className="mt-1 text-sm text-red-400">{errors.projectType.message}</p>
               )}
             </div>
 
@@ -140,12 +263,38 @@ export default function ContactForm() {
                 id="message"
                 rows={6}
                 className="w-full px-4 py-3 bg-black/50 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-neon focus:ring-1 focus:ring-neon transition-all duration-300 resize-none"
-                placeholder="Tell us about your project..."
+                placeholder="Tell us about your project requirements, timeline, and budget..."
               />
               {errors.message && (
                 <p className="mt-1 text-sm text-red-400">{errors.message.message}</p>
               )}
             </div>
+
+            {/* Honeypot field - hidden from users but visible to bots */}
+            <div style={{ display: 'none' }}>
+              <label htmlFor="website">Website (leave blank)</label>
+              <input
+                {...register('website')}
+                type="text"
+                id="website"
+                tabIndex={-1}
+                autoComplete="off"
+              />
+            </div>
+
+            {/* Turnstile CAPTCHA Widget */}
+            {process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && (
+              <div className="flex justify-center">
+                <div id="turnstile-widget"></div>
+              </div>
+            )}
+
+            {/* Rate limit error display */}
+            {rateLimitError && (
+              <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4">
+                <p className="text-red-400 text-center">{rateLimitError}</p>
+              </div>
+            )}
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <motion.button
@@ -203,7 +352,8 @@ export default function ContactForm() {
                 animate={{ opacity: 1, scale: 1 }}
                 className="text-center p-4 bg-green-500/20 border border-green-500/50 rounded-xl"
               >
-                <p className="text-green-400 font-medium">Message sent successfully! We'll get back to you soon.</p>
+                <p className="text-green-400 font-medium mb-2">✨ Message sent successfully!</p>
+                <p className="text-green-300 text-sm">You should receive an instant AI-powered response in your inbox. We'll follow up personally within 24 hours.</p>
               </motion.div>
             )}
 

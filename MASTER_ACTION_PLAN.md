@@ -101,8 +101,8 @@ Transform the uniQubit.ca landing page into a modern, production-ready site and 
 
 ## 🏗️ Phase 7-8: Advanced Features (NEXT PRIORITY)
 
-### Phase 7: Real-time & Advanced Features
-**Estimated Time**: 8-12 hours
+### Phase 7: Real-time & Advanced Features + AI Integration
+**Estimated Time**: 12-16 hours (including AI features)
 **Status**: Ready to Begin
 
 #### 7.1 Backend Integration
@@ -113,7 +113,16 @@ Transform the uniQubit.ca landing page into a modern, production-ready site and 
   - [ ] Configure Row Level Security (RLS) policies
   - [ ] Connect authentication to Supabase Auth
 
-#### 7.2 Real-time Features
+#### 7.2 AI-Powered Contact & Lead Management (NEW)
+- [ ] **Vercel AI SDK Integration**
+  - [ ] Install AI dependencies (ai, @ai-sdk/openai, zod)
+  - [ ] Set up OpenAI API configuration
+  - [ ] Implement intelligent contact form responses
+  - [ ] Build lead qualification and scoring system
+  - [ ] Create AI admin insights dashboard
+  - [ ] Add automated email responses with AI
+
+#### 7.3 Real-time Features
 - [ ] **Live Updates**
   - [ ] Implement Supabase real-time subscriptions
   - [ ] Add live project status updates
@@ -121,7 +130,14 @@ Transform the uniQubit.ca landing page into a modern, production-ready site and 
   - [ ] Add online user indicators
   - [ ] Connect MessageCenter to real database
 
-#### 7.3 File Management
+#### 7.4 AI Project Management (NEW)
+- [ ] **Intelligent Project Features**
+  - [ ] AI-generated project status updates
+  - [ ] Timeline estimation and optimization
+  - [ ] Risk assessment and recommendations
+  - [ ] Smart project template suggestions
+
+#### 7.5 File Management
 - [ ] **Document System**
   - [ ] Set up Supabase Storage
   - [ ] Create file upload components
