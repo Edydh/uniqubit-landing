@@ -18,6 +18,9 @@ ADD COLUMN IF NOT EXISTS phone VARCHAR(20),
 ADD COLUMN IF NOT EXISTS project_type VARCHAR(50),
 ADD COLUMN IF NOT EXISTS source VARCHAR(50) DEFAULT 'contact_form';
 
+-- 1.1. Ensure RLS is enabled on leads table (in case it wasn't enabled before)
+ALTER TABLE public.leads ENABLE ROW LEVEL SECURITY;
+
 -- 2. Create AI Communications Log table
 CREATE TABLE IF NOT EXISTS ai_communications (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -49,10 +52,55 @@ CREATE INDEX IF NOT EXISTS idx_leads_ai_score ON leads(ai_score DESC);
 CREATE INDEX IF NOT EXISTS idx_leads_source ON leads(source);
 CREATE INDEX IF NOT EXISTS idx_ai_communications_lead ON ai_communications(lead_id);
 CREATE INDEX IF NOT EXISTS idx_ai_communications_type ON ai_communications(communication_type);
+CREATE INDEX IF NOT EXISTS idx_ai_project_insights_project_id ON ai_project_insights(project_id);
 
--- 5. Insert sample data to test (optional)
--- INSERT INTO leads (name, email, message, project_type) VALUES 
--- ('Test User', 'test@example.com', 'I need a website for my business', 'web-development');
+-- 5. Enable Row Level Security on new AI tables
+ALTER TABLE public.ai_communications ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.ai_project_insights ENABLE ROW LEVEL SECURITY;
+
+-- 6. Create RLS policies for ai_project_insights
+-- Users can view project insights for their projects, admins can view all
+CREATE POLICY "Users can view project insights" ON public.ai_project_insights
+    FOR SELECT USING (EXISTS (
+        SELECT 1 FROM public.projects p 
+        WHERE p.id = project_id AND (
+            p.client_id = auth.uid() OR EXISTS (
+                SELECT 1 FROM public.users WHERE id = auth.uid() AND role = 'admin'
+            )
+        )
+    ));
+
+-- Only admins can manage project insights
+CREATE POLICY "Only admins can manage project insights" ON public.ai_project_insights
+    FOR ALL USING (EXISTS (
+        SELECT 1 FROM public.users WHERE id = auth.uid() AND role = 'admin'
+    ));
+
+-- 7. Create RLS policies for ai_communications
+-- Users can view AI communications for their projects, admins can view all
+CREATE POLICY "Users can view AI communications" ON public.ai_communications
+    FOR SELECT USING (
+        -- Allow if user owns the project (for project-related communications)
+        (project_id IS NOT NULL AND EXISTS (
+            SELECT 1 FROM public.projects p 
+            WHERE p.id = project_id AND (
+                p.client_id = auth.uid() OR EXISTS (
+                    SELECT 1 FROM public.users WHERE id = auth.uid() AND role = 'admin'
+                )
+            )
+        ))
+        OR
+        -- Allow if admin (for lead-related communications where project_id might be null)
+        EXISTS (
+            SELECT 1 FROM public.users WHERE id = auth.uid() AND role = 'admin'
+        )
+    );
+
+-- Only admins can manage AI communications
+CREATE POLICY "Only admins can manage AI communications" ON public.ai_communications
+    FOR ALL USING (EXISTS (
+        SELECT 1 FROM public.users WHERE id = auth.uid() AND role = 'admin'
+    ));
 
 -- Query to verify the changes
 SELECT 
