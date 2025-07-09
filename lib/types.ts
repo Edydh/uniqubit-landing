@@ -3,7 +3,7 @@
 export type UserRole = 'admin' | 'client';
 export type LeadStatus = 'new' | 'contacted' | 'converted' | 'rejected';
 export type ProjectStage = 'idea_collection' | 'refinement' | 'quote' | 'agreement' | 'development' | 'completion' | 'payment';
-export type StageStatus = 'pending' | 'in_progress' | 'completed';
+export type StageStatus = 'pending' | 'in_progress' | 'completed' | 'on_hold';
 
 // Database Tables
 export interface User {
@@ -33,8 +33,10 @@ export interface Project {
   description?: string;
   client_id: string;
   current_stage: ProjectStage;
+  budget?: number;
   created_at: string;
   updated_at: string;
+  users?: User; // For joined user data
 }
 
 export interface ProjectStageRecord {
@@ -234,4 +236,111 @@ export interface AIProjectInsight {
   data_sources?: any;
   created_at: string;
   updated_at: string;
+}
+
+// Enhanced Database Schema Types (Phase 2.1)
+
+export interface ProjectType {
+  id: string;
+  name: string;
+  description?: string;
+  default_stages: ProjectStageTemplate[];
+  estimated_duration_weeks: number;
+  base_price_range?: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ProjectStageTemplate {
+  name: string;
+  description: string;
+  estimated_hours: number;
+  deliverables: string[];
+}
+
+export interface ProjectStageRecord {
+  id: string;
+  project_id: string;
+  name: string;
+  description?: string;
+  order_index: number;
+  status: 'pending' | 'in_progress' | 'completed' | 'on_hold';
+  requires_approval: boolean;
+  approved_at?: string;
+  approved_by?: string;
+  started_at?: string;
+  completed_at?: string;
+  estimated_hours?: number;
+  actual_hours?: number;
+  deliverables: string[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ProjectFile {
+  id: string;
+  project_id: string;
+  stage_id?: string;
+  uploaded_by: string;
+  file_name: string;
+  file_url: string;
+  file_size?: number;
+  file_type?: string;
+  mime_type?: string;
+  description?: string;
+  version: number;
+  is_deliverable: boolean;
+  is_public: boolean;
+  metadata: Record<string, any>;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ProjectMessage {
+  id: string;
+  project_id: string;
+  stage_id?: string;
+  sender_id: string;
+  content: string;
+  message_type: 'comment' | 'update' | 'alert' | 'approval_request';
+  attachments: any[];
+  seen_by: string[];
+  reply_to?: string;
+  created_at: string;
+  updated_at: string;
+  sender?: User;
+}
+
+export interface Notification {
+  id: string;
+  user_id: string;
+  project_id: string;
+  type: 'stage_update' | 'message' | 'file_upload' | 'approval_request' | 'payment_due' | 'project_complete';
+  title: string;
+  message: string;
+  action_url?: string;
+  priority: 'low' | 'normal' | 'high' | 'urgent';
+  read_at?: string;
+  created_at: string;
+}
+
+// Enhanced Project interface
+export interface EnhancedProject extends Project {
+  project_type_id?: string;
+  estimated_completion?: string;
+  actual_completion?: string;
+  total_budget?: number;
+  currency: string;
+  priority: 'low' | 'normal' | 'high' | 'urgent';
+  metadata: Record<string, any>;
+  project_type?: ProjectType;
+}
+
+// Enhanced ProjectWithStages interface
+export interface EnhancedProjectWithStages extends EnhancedProject {
+  stages: ProjectStageRecord[];
+  files?: ProjectFile[];
+  messages?: ProjectMessage[];
+  client?: User;
 }

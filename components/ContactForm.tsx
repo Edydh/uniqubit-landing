@@ -88,8 +88,8 @@ export default function ContactForm() {
         throw new Error('Please complete the security verification');
       }
 
-      // Use the AI-enhanced contact endpoint with security
-      const response = await fetch('/api/contact-ai', {
+      // Use the basic contact endpoint (AI endpoint has dependency issues)
+      const response = await fetch('/api/contact', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -114,7 +114,7 @@ export default function ContactForm() {
       }
 
       const result = await response.json();
-      console.log('AI Contact form submitted successfully:', result);
+      console.log('Contact form submitted successfully:', result);
       setSubmitStatus('success');
       reset();
     } catch (error) {

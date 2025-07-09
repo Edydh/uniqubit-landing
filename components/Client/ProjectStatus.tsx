@@ -1,6 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import Link from 'next/link';
 import type { Project, ProjectStage } from '../../lib/types';
 
 interface ProjectStatusProps {
@@ -172,6 +173,19 @@ export default function ProjectStatus({ project, className = '' }: ProjectStatus
             </motion.div>
           );
         })}
+      </div>
+
+      {/* Action Button */}
+      <div className="mt-6 pt-4 border-t border-white/10">
+        <Link href={`/client/project/${project.id}`}>
+          <motion.div
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            className="w-full px-4 py-3 bg-gradient-to-r from-neon to-cyan-400 text-black font-semibold rounded-lg hover:shadow-lg hover:shadow-neon/25 transition-all duration-300 text-center cursor-pointer"
+          >
+            View Project Details
+          </motion.div>
+        </Link>
       </div>
     </div>
   );

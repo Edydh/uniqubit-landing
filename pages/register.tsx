@@ -16,13 +16,19 @@ const registerSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
   confirmPassword: z.string().min(6, 'Please confirm your password'),
-  role: z.enum(['client', 'admin']).optional().default('client'),
+  role: z.enum(['client', 'admin']).default('client'),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ["confirmPassword"],
 });
 
-type RegisterFormFields = z.infer<typeof registerSchema>;
+interface RegisterFormFields {
+  full_name: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+  role: 'client' | 'admin';
+}
 
 export default function Register() {
   const router = useRouter();
@@ -37,7 +43,6 @@ export default function Register() {
     handleSubmit,
     formState: { errors },
   } = useForm<RegisterFormFields>({
-    resolver: zodResolver(registerSchema),
     defaultValues: {
       role: 'client',
     },

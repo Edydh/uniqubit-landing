@@ -89,50 +89,46 @@ export default function LeadsManagement() {
     if (!selectedLead) return;
 
     try {
-      // First, create a client user if they don't exist
-      const { data: existingUser } = await supabase
-        .from('users')
-        .select('id')
-        .eq('email', selectedLead.email)
-        .single();
+      console.log('Converting lead to project:', selectedLead.id);
 
-      let clientId = existingUser?.id;
+      const response = await fetch('/api/convert-lead', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          leadId: selectedLead.id,
+          projectTitle,
+          projectDescription,
+        }),
+      });
 
-      if (!existingUser) {
-        // Create a new user for the client
-        const { data: newUser, error: userError } = await supabase
-          .from('users')
-          .insert({
-            email: selectedLead.email,
-            full_name: selectedLead.name,
-            role: 'client'
-          })
-          .select('id')
-          .single();
-
-        if (userError) throw userError;
-        clientId = newUser.id;
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to convert lead');
       }
 
-      // Create the project
-      const { error: projectError } = await supabase
-        .from('projects')
-        .insert({
-          title: projectTitle,
-          description: projectDescription,
-          client_id: clientId,
-          current_stage: 'idea_collection'
-        });
+      const result = await response.json();
+      console.log('Lead converted successfully:', result);
 
-      if (projectError) throw projectError;
-
-      // Update lead status to converted
-      await handleUpdateStatus(selectedLead.id, 'converted');
+      // Update lead status in local state
+      setLeads(prevLeads =>
+        prevLeads.map(lead =>
+          lead.id === selectedLead.id 
+            ? { ...lead, status: 'converted' as const }
+            : lead
+        )
+      );
 
       setShowConvertModal(false);
       setSelectedLead(null);
+
+      // Show success message or redirect
+      alert(`Project "${projectTitle}" created successfully!`);
+
     } catch (error) {
       console.error('Error converting lead to project:', error);
+      alert('Failed to convert lead to project. Please try again.');
     }
   };
 

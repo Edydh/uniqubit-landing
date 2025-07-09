@@ -35,12 +35,12 @@ export default function LeadsTable({ leads, onUpdateStatus, onConvertToProject, 
   );
 
   const sortedLeads = [...filteredLeads].sort((a, b) => {
-    let aValue = a[sortBy];
-    let bValue = b[sortBy];
+    let aValue: any = a[sortBy];
+    let bValue: any = b[sortBy];
     
     if (sortBy === 'created_at') {
-      aValue = new Date(aValue).getTime();
-      bValue = new Date(bValue).getTime();
+      aValue = new Date(aValue as string).getTime();
+      bValue = new Date(bValue as string).getTime();
     }
     
     if (sortOrder === 'asc') {

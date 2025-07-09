@@ -80,7 +80,7 @@ export default function AdminProjects() {
     if (filters.search) {
       filtered = filtered.filter(project =>
         project.title.toLowerCase().includes(filters.search.toLowerCase()) ||
-        project.description.toLowerCase().includes(filters.search.toLowerCase())
+        (project.description?.toLowerCase().includes(filters.search.toLowerCase()) || false)
       );
     }
 
@@ -341,7 +341,7 @@ export default function AdminProjects() {
                           </svg>
                         </motion.button>
                         <motion.button
-                          onClick={() => router.push(`/admin/projects/${project.id}`)}
+                          onClick={() => router.push(`/admin/project/${project.id}`)}
                           className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
                           whileHover={{ scale: 1.1 }}
                         >

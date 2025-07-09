@@ -6,7 +6,7 @@ import type { User } from '../../lib/types';
 
 interface ClientLayoutProps {
   children: ReactNode;
-  user: User;
+  user: User | null;
 }
 
 export default function ClientLayout({ children, user }: ClientLayoutProps) {

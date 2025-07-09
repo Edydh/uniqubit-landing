@@ -8,12 +8,29 @@ import { signOut } from '../../lib/auth';
 import type { User } from '../../lib/types';
 
 interface ClientNavigationProps {
-  user: User;
+  user: User | null;
 }
 
 export default function ClientNavigation({ user }: ClientNavigationProps) {
   const router = useRouter();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+
+  // If no user, show minimal navigation
+  if (!user) {
+    return (
+      <nav className="bg-black/30 backdrop-blur-xl border-b border-white/10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between h-16">
+            <div className="flex items-center">
+              <Link href="/client/dashboard" className="text-2xl font-bold bg-gradient-to-r from-neon to-purple-400 bg-clip-text text-transparent">
+                uniQubit
+              </Link>
+            </div>
+          </div>
+        </div>
+      </nav>
+    );
+  }
 
   const handleSignOut = async () => {
     try {

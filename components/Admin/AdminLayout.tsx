@@ -6,7 +6,7 @@ import type { User } from '../../lib/types';
 
 interface AdminLayoutProps {
   children: ReactNode;
-  currentUser: User;
+  currentUser: User | null;
   title?: string;
   subtitle?: string;
 }
