@@ -7,6 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { enhancedContactSchema } from '@/lib/security/spamDetection';
 import { PhoneInput } from './PhoneInput';
+import * as gtag from '../lib/analytics';
 
 type ContactFormData = z.infer<typeof enhancedContactSchema>;
 
@@ -115,6 +116,10 @@ export default function ContactForm() {
 
       const result = await response.json();
       console.log('Contact form submitted successfully:', result);
+      
+      // Track successful contact form submission
+      gtag.trackContactForm(data.email, data.name);
+      
       setSubmitStatus('success');
       reset();
     } catch (error) {

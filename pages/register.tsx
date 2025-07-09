@@ -10,6 +10,7 @@ import { useRouter } from 'next/router';
 import AuthLayout from '../components/AuthLayout';
 import { signUp } from '../lib/auth';
 import type { RegisterFormData } from '../lib/types';
+import * as gtag from '../lib/analytics';
 
 const registerSchema = z.object({
   full_name: z.string().min(2, 'Full name must be at least 2 characters'),
@@ -66,6 +67,9 @@ export default function Register() {
       if (result.error) {
         setError(result.error);
       } else {
+        // Track successful registration
+        gtag.trackRegistration('email');
+        
         setSuccess('Registration successful! Please check your email to verify your account.');
         setTimeout(() => {
           router.push('/login');

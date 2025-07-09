@@ -10,6 +10,7 @@ import { useRouter } from 'next/router';
 import AuthLayout from '../components/AuthLayout';
 import { signIn, getCurrentUser } from '../lib/auth';
 import type { LoginFormData } from '../lib/types';
+import * as gtag from '../lib/analytics';
 
 const loginSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -40,6 +41,9 @@ export default function Login() {
       if (result.error) {
         setError(result.error);
       } else {
+        // Track successful login
+        gtag.trackLogin('email');
+        
         // Redirect based on user role
         const userResult = await getCurrentUser();
         if (userResult.user?.role === 'admin') {

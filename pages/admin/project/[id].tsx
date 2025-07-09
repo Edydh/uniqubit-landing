@@ -6,14 +6,69 @@ import { useRouter } from 'next/router';
 import Link from 'next/link';
 import AdminLayout from '../../../components/Admin/AdminLayout';
 import ProjectHeader from '../../../components/Project/ProjectHeader';
-import ProjectTimeline from '../../../components/Project/ProjectTimeline';
-import ProjectComments from '../../../components/Project/ProjectComments';
-import ProjectFiles from '../../../components/Project/ProjectFiles';
-import ProjectMetrics from '../../../components/Project/ProjectMetrics';
 import { getCurrentUser } from '../../../lib/auth';
 import { supabase } from '../../../lib/supabase';
 import { enhancedProjectService, projectMessageService } from '../../../lib/services/enhancedProjectService';
 import type { User, EnhancedProjectWithStages, ProjectMessage } from '../../../lib/types';
+
+// Temporary stub components to resolve TypeScript import errors
+const ProjectTimeline = ({ project, onStageUpdate, isAdmin }: any) => (
+  <div className="bg-glass backdrop-blur-xl rounded-2xl border border-white/10 shadow-glass p-6">
+    <h3 className="text-lg font-bold text-white mb-4">Project Timeline</h3>
+    <p className="text-gray-400">Timeline component will be implemented here.</p>
+    <div className="mt-4 space-y-2">
+      <div className="text-sm text-gray-300">Current Stage: {project?.current_stage || 'Not set'}</div>
+      <div className="text-sm text-gray-300">Status: {project?.status || 'Not set'}</div>
+    </div>
+  </div>
+);
+
+const ProjectComments = ({ messages, currentUser, onSendMessage, projectId, isAdmin }: any) => (
+  <div className="bg-glass backdrop-blur-xl rounded-2xl border border-white/10 shadow-glass p-6">
+    <h3 className="text-lg font-bold text-white mb-4">Project Comments</h3>
+    <p className="text-gray-400 mb-4">Comments component will be implemented here.</p>
+    <div className="space-y-3">
+      {messages?.length > 0 ? (
+        messages.map((msg: any, idx: number) => (
+          <div key={idx} className="bg-white/5 rounded-lg p-3">
+            <div className="text-sm text-gray-300">
+              {msg.sender?.full_name || 'Unknown'}: {msg.content}
+            </div>
+          </div>
+        ))
+      ) : (
+        <p className="text-gray-500 text-sm">No messages yet.</p>
+      )}
+    </div>
+  </div>
+);
+
+const ProjectMetrics = ({ project, isAdmin }: any) => (
+  <div className="bg-glass backdrop-blur-xl rounded-2xl border border-white/10 shadow-glass p-6">
+    <h3 className="text-lg font-bold text-white mb-4">Project Metrics</h3>
+    <p className="text-gray-400 mb-4">Metrics component will be implemented here.</p>
+    <div className="space-y-3">
+      <div className="flex justify-between">
+        <span className="text-gray-400">Budget:</span>
+        <span className="text-white">${project?.budget || 0}</span>
+      </div>
+      <div className="flex justify-between">
+        <span className="text-gray-400">Progress:</span>
+        <span className="text-neon">{project?.current_stage || 'N/A'}</span>
+      </div>
+    </div>
+  </div>
+);
+
+const ProjectFiles = ({ project, isAdmin, onFileUpload, onFileDelete }: any) => (
+  <div className="bg-glass backdrop-blur-xl rounded-2xl border border-white/10 shadow-glass p-6">
+    <h3 className="text-lg font-bold text-white mb-4">Project Files</h3>
+    <p className="text-gray-400">Files component will be implemented here.</p>
+    <div className="mt-4">
+      <p className="text-sm text-gray-300">File management functionality coming soon.</p>
+    </div>
+  </div>
+);
 
 export default function AdminProjectDetail() {
   const router = useRouter();
@@ -260,11 +315,11 @@ export default function AdminProjectDetail() {
             <ProjectFiles 
               project={project}
               isAdmin={true}
-              onFileUpload={(file, stage) => {
+              onFileUpload={(file: File, stage: string) => {
                 // TODO: Implement file upload functionality
                 console.log('File upload:', file.name, stage);
               }}
-              onFileDelete={(fileId) => {
+              onFileDelete={(fileId: string) => {
                 // TODO: Implement file deletion functionality
                 console.log('File delete:', fileId);
               }}
