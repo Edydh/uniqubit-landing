@@ -10,6 +10,8 @@ export interface User {
   id: string;
   email: string;
   full_name?: string;
+  business_name?: string;
+  country?: string;
   role: UserRole;
   created_at: string;
   updated_at: string;
