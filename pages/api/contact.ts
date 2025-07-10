@@ -1,8 +1,9 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { supabaseAdmin } from '../../lib/supabase';
+import { UniQubitSentry, withSentryApiRoute } from '../../lib/sentry';
 import type { ContactFormData } from '../../lib/types';
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+async function handler(req: NextApiRequest, res: NextApiResponse) {
   console.log('🔍 Contact API called with method:', req.method);
   console.log('🔍 Request body:', req.body);
   
@@ -78,8 +79,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   } catch (error) {
     console.error('❌ Contact form error:', error);
+    
+    // Enhanced Sentry error tracking
+    UniQubitSentry.captureBusinessError(error as Error, {
+      action: 'contact_form_submission',
+      email: req.body.email,
+    });
+    
     return res.status(500).json({ 
       message: 'An unexpected error occurred. Please try again later.' 
     });
   }
 }
+
+// Wrap the handler with Sentry monitoring
+export default withSentryApiRoute(handler, 'contact');

@@ -344,6 +344,12 @@ OPENAI_API_KEY=your_openai_key
 # Resend
 RESEND_API_KEY=your_resend_key
 
+# Sentry (Error Monitoring)
+NEXT_PUBLIC_SENTRY_DSN=your_sentry_dsn
+SENTRY_ORG=your_sentry_org
+SENTRY_PROJECT=your_sentry_project
+SENTRY_AUTH_TOKEN=your_sentry_auth_token
+
 # Cloudflare Turnstile (optional)
 NEXT_PUBLIC_TURNSTILE_SITE_KEY=your_site_key
 TURNSTILE_SECRET_KEY=your_secret_key
@@ -382,261 +388,133 @@ npm run lint
 - **Large bundle size**: Consider code splitting
 - **Image optimization**: Implement Next.js Image component
 
+### Sentry Setup Issues
+- **Source maps not uploading**: Check `SENTRY_AUTH_TOKEN` environment variable
+- **Development errors being captured**: Ensure `NODE_ENV=development` filters are working
+- **Missing error context**: Verify custom error tracking is implemented in API routes
+
+### Sentry Troubleshooting Commands
+```bash
+# Test Sentry configuration
+npm run sentry:test
+
+# Verify source map upload
+npx @sentry/cli info
+
+# Check Sentry project configuration
+npx @sentry/cli projects list
+```
+
 ## 📊 Monitoring & Analytics
 
-### Performance Monitoring
-- Lighthouse scores
-- Core Web Vitals
-- Bundle analysis
+### **Sentry Error Monitoring**
 
-### Error Tracking
-- Console errors
-- API error rates
-- User feedback
+The uniQubit platform uses Sentry for comprehensive error tracking, performance monitoring, and business metrics collection.
 
-### Business Metrics
-- Lead conversion rates
-- User engagement
-- Project completion rates
+#### **Sentry Configuration**
 
----
-
-*This guide is continuously updated as the platform evolves.*
-
-## 🤖 **AI AGENT SYSTEM ARCHITECTURE**
-
-### **Dual AI Agent Overview**
-
-The uniQubit platform features two specialized AI agents designed to enhance both admin and client experiences:
-
-#### **🧠 uniAgent (Admin AI Assistant)**
-- **Purpose**: Streamline admin operations and decision-making
-- **Context**: Full access to leads, projects, clients, and business data
-- **Personality**: Professional, analytical, efficiency-focused
-
-#### **🤝 Quibi (Client AI Assistant)**  
-- **Purpose**: Guide clients through their project journey
-- **Context**: Client-specific project data and stage information
-- **Personality**: Friendly, helpful, supportive
-
-### **Technical Implementation**
-
-#### **AI Agent API Structure**
 ```typescript
-// lib/ai/agents/uniAgent.ts
-export class UniAgent {
-  async summarizeLead(leadId: string): Promise<LeadSummary> {
-    const lead = await this.getLeadData(leadId);
-    const analysis = await this.openai.chat.completions.create({
-      model: "gpt-4",
-      messages: [
-        {
-          role: "system",
-          content: `You are uniAgent, an AI assistant for uniQubit admin operations. 
-                   Analyze leads and provide concise, actionable summaries.`
-        },
-        {
-          role: "user", 
-          content: `Summarize this lead: ${JSON.stringify(lead)}`
-        }
-      ]
-    });
-    return this.parseLeadSummary(analysis.choices[0].message.content);
-  }
-
-  async suggestProjectSetup(requirements: ProjectRequirements): Promise<ProjectSetup> {
-    // AI-powered project type and stage recommendations
-  }
-
-  async generateQuote(projectDetails: ProjectDetails): Promise<QuoteEstimate> {
-    // AI-generated pricing and timeline estimates
-  }
-}
-
-// lib/ai/agents/quibi.ts
-export class Quibi {
-  async explainCurrentStage(projectId: string, clientId: string): Promise<StageExplanation> {
-    const project = await this.getClientProjectData(projectId, clientId);
-    const explanation = await this.openai.chat.completions.create({
-      model: "gpt-4",
-      messages: [
-        {
-          role: "system",
-          content: `You are Quibi, a friendly AI assistant helping clients navigate their projects.
-                   Be encouraging, clear, and helpful in your explanations.`
-        },
-        {
-          role: "user",
-          content: `Explain the current stage for: ${JSON.stringify(project)}`
-        }
-      ]
-    });
-    return this.parseStageExplanation(explanation.choices[0].message.content);
-  }
-
-  async answerClientQuestion(question: string, context: ClientContext): Promise<string> {
-    // Context-aware client support responses
-  }
-}
+// Automatic setup via configuration files
+// - sentry.client.config.js: Client-side error tracking
+// - sentry.server.config.js: Server-side API monitoring  
+// - sentry.edge.config.js: Edge runtime monitoring
 ```
 
-#### **Chat Interface Components**
+#### **Custom Error Tracking**
+
 ```typescript
-// components/AI/UniAgentChat.tsx
-export const UniAgentChat: React.FC<{ leadId?: string; projectId?: string }> = ({ 
-  leadId, 
-  projectId 
-}) => {
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [isTyping, setIsTyping] = useState(false);
+import { UniQubitSentry } from '@/lib/sentry';
 
-  const handleUniAgentQuery = async (query: string) => {
-    setIsTyping(true);
-    const response = await fetch('/api/ai/uni-agent', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ query, leadId, projectId, context: 'admin' })
-    });
-    const result = await response.json();
-    setMessages(prev => [...prev, result.message]);
-    setIsTyping(false);
-  };
+// Track business-critical errors
+UniQubitSentry.captureBusinessError(error, {
+  action: 'lead_conversion',
+  userId: user.id,
+  leadId: lead.id
+});
 
+// Track AI service errors
+UniQubitSentry.captureAIError(error, {
+  service: 'openai',
+  prompt: userPrompt,
+  leadData: leadInfo
+});
+
+// Track email delivery issues
+UniQubitSentry.captureEmailError(error, {
+  service: 'resend',
+  emailType: 'welcome',
+  recipient: user.email
+});
+
+// Track database operations
+UniQubitSentry.captureDatabaseError(error, {
+  operation: 'create',
+  table: 'leads',
+  userId: user.id
+});
+```
+
+#### **React Error Boundaries**
+
+```tsx
+import { UniQubitErrorBoundary, withSentryErrorBoundary } from '@/lib/sentry';
+
+// Option 1: Wrap component with error boundary
+export default function MyPage() {
   return (
-    <div className="ai-chat-container">
-      <div className="chat-header">
-        <div className="ai-avatar">🧠</div>
-        <span>uniAgent</span>
-      </div>
-      {/* Chat interface implementation */}
-    </div>
+    <UniQubitErrorBoundary componentName="MyPage">
+      <YourPageContent />
+    </UniQubitErrorBoundary>
   );
-};
+}
 
-// components/AI/QuibiChat.tsx  
-export const QuibiChat: React.FC<{ projectId: string }> = ({ projectId }) => {
-  // Similar implementation for client-facing AI
-  return (
-    <div className="ai-chat-container client-theme">
-      <div className="chat-header">
-        <div className="ai-avatar">🤝</div>
-        <span>Quibi</span>
-      </div>
-      {/* Client-optimized chat interface */}
-    </div>
-  );
-};
+// Option 2: HOC pattern for automatic error tracking
+const SafeComponent = withSentryErrorBoundary(MyComponent, 'MyComponent');
 ```
 
-#### **API Endpoints**
+#### **User Journey Tracking**
+
 ```typescript
-// pages/api/ai/uni-agent.ts
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const { query, leadId, projectId, context } = req.body;
-  
-  const uniAgent = new UniAgent();
-  let response;
-
-  // Route to appropriate uniAgent capability
-  if (query.includes('summarize lead')) {
-    response = await uniAgent.summarizeLead(leadId);
-  } else if (query.includes('project setup')) {
-    response = await uniAgent.suggestProjectSetup(req.body.requirements);
-  } else if (query.includes('quote')) {
-    response = await uniAgent.generateQuote(req.body.projectDetails);
-  } else {
-    response = await uniAgent.generalQuery(query, { leadId, projectId });
-  }
-
-  res.status(200).json({ message: response });
-}
-
-// pages/api/ai/quibi.ts
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const { query, projectId, clientId } = req.body;
-  
-  const quibi = new Quibi();
-  const response = await quibi.handleClientQuery(query, { projectId, clientId });
-  
-  res.status(200).json({ message: response });
-}
+// Track user interactions for better debugging
+UniQubitSentry.captureUserJourney('contact_form_submitted', {
+  userId: user.id,
+  userRole: 'client',
+  page: '/contact',
+  action: 'form_submission'
+});
 ```
 
-### **AI Agent Capabilities Matrix**
+#### **Performance Monitoring**
 
-#### **uniAgent Admin Functions**
-| Function | Input | Output | Priority |
-|----------|-------|--------|----------|
-| Lead Summary | Lead ID, form data | Concise analysis, score, recommendations | High |
-| Project Setup | Requirements, client info | Suggested project type, stages, timeline | High |
-| Stage Planning | Project type, current stage | Recommended tasks, deliverables | Medium |
-| Quote Generation | Project details, requirements | Pricing estimate, milestone breakdown | High |
-| Response Suggestions | Client message, context | Suggested admin responses | Medium |
-| Progress Recap | Project ID, timeline | Current status, delays, next steps | Low |
+- **Transaction Tracking**: Automatic API route performance monitoring
+- **Page Load Metrics**: Client-side performance tracking
+- **Business Metrics**: Custom metrics for lead conversion, email delivery
+- **Real User Monitoring**: Session replay for critical errors
 
-#### **Quibi Client Functions**  
-| Function | Input | Output | Priority |
-|----------|-------|--------|----------|
-| Stage Explanation | Project ID, current stage | Clear explanation of current/next steps | High |
-| File Guidance | Upload context, file type | Purpose explanation, requirements | Medium |
-| Progress Update | Project ID, recent activity | Summary of recent changes | High |
-| General Support | Client question, project context | Helpful, contextual response | High |
-| Approval Reminders | Pending approvals, deadlines | Friendly reminder with context | Medium |
+#### **Alert Configuration**
 
-### **Context Management System**
+**High Priority Alerts:**
+- AI service failures (OpenAI API errors)
+- Email delivery failures (Resend/Supabase)
+- Database connection issues
+- Authentication failures
 
-#### **Admin Context (uniAgent)**
-```typescript
-interface AdminContext {
-  leadData: Lead[];
-  projectData: Project[];
-  clientData: Client[];
-  businessMetrics: {
-    conversionRates: number;
-    averageProjectValue: number;
-    timelineAccuracy: number;
-  };
-  teamCapacity: TeamMember[];
-}
-```
+**Business Alerts:**
+- Lead conversion failures
+- Contact form submission errors
+- Project creation failures
+- User registration issues
 
-#### **Client Context (Quibi)**
-```typescript
-interface ClientContext {
-  projectId: string;
-  clientId: string;
-  currentStage: ProjectStage;
-  completedMilestones: Milestone[];
-  pendingApprovals: Approval[];
-  uploadedFiles: File[];
-  communicationHistory: Message[];
-}
-```
+#### **Dashboard Categories**
 
-### **Integration Points**
+**Error Categories:**
+- `business_critical`: Lead conversion, project creation
+- `ai_service`: OpenAI, lead analysis, contact AI
+- `email_delivery`: Resend, Supabase auth emails
+- `database`: Supabase operations
+- `component_boundary`: React component errors
 
-#### **Admin Dashboard Integration**
-- Embedded chat widget in leads table for instant summaries
-- Project setup wizard with AI recommendations
-- Quick response suggestions in admin messaging
-- Automated progress reports in project dashboard
-
-#### **Client Portal Integration**  
-- Welcome message with current stage explanation
-- File upload assistance with contextual guidance
-- Progress updates with friendly explanations
-- Help chat available on all client pages
-
-### **Privacy & Security**
-
-#### **Data Access Controls**
-- uniAgent: Full admin-level access to platform data
-- Quibi: Restricted to client's own project data only
-- All AI interactions logged for quality and security
-- No sensitive data (passwords, payment info) exposed to AI
-
-#### **Conversation Management**
-- Client conversations isolated per project
-- Admin conversations can span multiple leads/projects
-- Chat history stored securely with encryption
-- Option to clear/export conversation history
+**Performance Categories:**
+- `api_route`: API endpoint performance
+- `user_journey`: User interaction tracking
+- `business_metric`: Conversion and engagement metrics

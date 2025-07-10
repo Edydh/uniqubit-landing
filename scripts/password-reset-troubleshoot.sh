@@ -1,0 +1,56 @@
+#!/bin/bash
+
+echo "🔍 uniQubit Password Reset Troubleshooting Guide"
+echo "================================================"
+echo ""
+
+echo "1. 📧 Email Configuration Issues:"
+echo "   - Go to your Supabase dashboard → Authentication → Email Templates"
+echo "   - Make sure 'Reset Password' template is enabled"
+echo "   - Check if you have a custom SMTP configured or using Supabase's default"
+echo ""
+
+echo "2. 🚫 Rate Limiting (Most Common Issue):"
+echo "   - Supabase defaults to 2 emails per hour"
+echo "   - Go to Supabase dashboard → Project Settings → Rate limits"
+echo "   - Increase 'Email rate limit' to 50+ per hour"
+echo ""
+
+echo "3. 🔑 Environment Variables:"
+echo "   - Check .env.local file exists and contains:"
+echo "     NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co"
+echo "     NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key"
+echo "     NEXT_PUBLIC_SITE_URL=http://localhost:3000 (for development)"
+echo ""
+
+echo "4. 🌐 URL Configuration:"
+echo "   - Go to Supabase dashboard → Authentication → URL configuration"
+echo "   - Add your domain to 'Redirect URLs': http://localhost:3000/reset-password"
+echo "   - For production, add: https://uniqubit.ca/reset-password"
+echo ""
+
+echo "5. 📝 Email Provider Status:"
+echo "   - Go to Supabase dashboard → Project Settings → General"
+echo "   - Check if email delivery is enabled"
+echo "   - If using custom SMTP, verify SMTP settings"
+echo ""
+
+echo "6. 🧪 Testing Steps:"
+echo "   - Start dev server: npm run dev"
+echo "   - Go to: http://localhost:3000/forgot-password"
+echo "   - Enter your email (use the same email from your Supabase auth users)"
+echo "   - Check browser console for detailed error logs"
+echo "   - Check your email inbox AND spam folder"
+echo ""
+
+echo "💡 Quick Fixes to Try:"
+echo "   1. Wait 1 hour if you've tried multiple times (rate limit reset)"
+echo "   2. Check Supabase project billing - free tier has stricter limits"
+echo "   3. Try with a different email address"
+echo "   4. Check Supabase logs in dashboard → Logs → Database/Auth"
+echo ""
+
+echo "🚨 If still having issues:"
+echo "   - Check the browser console for the detailed error message"
+echo "   - Look at Supabase dashboard → Logs for more details"
+echo "   - The improved error logging should now show the specific Supabase error"

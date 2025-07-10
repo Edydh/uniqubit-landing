@@ -7,7 +7,8 @@ import Hero from '../components/Hero';
 const Services = dynamic(() => import('../components/Services'), {
   loading: () => <div className="min-h-screen flex items-center justify-center">
     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-  </div>
+  </div>,
+  ssr: false // Prevent hydration mismatch by rendering only on client
 });
 
 const About = dynamic(() => import('../components/About'), {

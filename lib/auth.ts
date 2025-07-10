@@ -120,17 +120,53 @@ export const canAccessClientRoutes = (user: User | null): boolean => {
 // Password reset
 export const resetPassword = async (email: string): Promise<{ error?: string }> => {
   try {
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/auth/reset-password`,
+    // Get the site URL from environment or fallback to current origin
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 
+                   (typeof window !== 'undefined' ? window.location.origin : 'https://uniqubit.ca');
+    
+    console.log('Reset password request:', { 
+      email, 
+      siteUrl, 
+      redirectTo: `${siteUrl}/reset-password`,
+      supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
+      hasAnonKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    });
+    
+    const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${siteUrl}/reset-password`,
     });
 
     if (error) {
-      return { error: error.message };
+      console.error('Supabase reset password error:', {
+        message: error.message,
+        status: error.status,
+        code: error.code,
+        details: error
+      });
+      
+      // More specific error messages based on Supabase error types
+      if (error.message.includes('rate') || error.message.includes('limit') || error.message.includes('too many')) {
+        return { error: 'Too many reset attempts. Please wait a few minutes before trying again.' };
+      } else if (error.message.includes('Invalid') || error.message.includes('not allowed')) {
+        return { error: 'Configuration error. Please contact support if this persists.' };
+      } else if (error.message.includes('User not found') || error.message.includes('not found')) {
+        return { error: 'If this email is registered, you will receive a reset link shortly.' };
+      } else if (error.status === 429) {
+        return { error: 'Rate limit exceeded. Please wait before trying again.' };
+      } else if (error.status === 400) {
+        return { error: 'Invalid request. Please check your email address.' };
+      } else if (error.status === 422) {
+        return { error: 'Invalid email format or configuration issue.' };
+      }
+      
+      return { error: `Password reset failed: ${error.message}` };
     }
 
+    console.log('Reset password email sent successfully:', data);
     return {};
   } catch (error) {
-    return { error: 'An unexpected error occurred while sending reset email' };
+    console.error('Unexpected error during password reset:', error);
+    return { error: `Error sending recovery email: ${error instanceof Error ? error.message : 'Unknown error'}` };
   }
 };
 

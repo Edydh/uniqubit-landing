@@ -16,13 +16,19 @@ import { supabase } from '@/lib/supabase';
 import { contactFormRateLimiter } from '@/lib/security/rateLimiter';
 import { SpamDetector, enhancedContactSchema } from '@/lib/security/spamDetection';
 import { TurnstileVerifier, getTurnstileConfig } from '@/lib/security/turnstile';
+import { UniQubitSentry, withSentryApiRoute } from '@/lib/sentry';
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
+    // Track user journey for AI contact form
+    UniQubitSentry.captureUserJourney('ai_contact_form_started', {
+      page: 'contact-ai',
+      action: 'form_submission'
+    });
     // 1. Rate limiting check
     const rateLimitResult = contactFormRateLimiter.checkRateLimit(req);
     if (!rateLimitResult.allowed) {
@@ -236,9 +242,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
     } catch (fallbackError) {
       console.error('Fallback save failed:', fallbackError);
+      
+      // Capture critical business error
+      UniQubitSentry.captureBusinessError(fallbackError as Error, {
+        action: 'contact_ai_fallback_failed',
+        email: req.body?.email
+      });
+      
       res.status(500).json({ 
         error: 'Failed to process contact inquiry. Please try again.' 
       });
     }
   }
 }
+
+// Export with Sentry monitoring
+export default withSentryApiRoute(handler, 'contact-ai');
