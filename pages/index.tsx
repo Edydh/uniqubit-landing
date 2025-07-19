@@ -31,6 +31,7 @@ export default function Home() {
   return (
     <>
       <Head>
+        <link rel="icon" type="image/png" href="/favicon.png" />
         <title>uniQubit – Premium Software Development Agency | AI-Ready Solutions</title>
         <meta name="description" content="Transform your ideas into reality with uniQubit's premium software development services. Specializing in AI-ready solutions, modern web applications, and scalable systems using Next.js, TypeScript, and cutting-edge technologies." />
         <meta name="keywords" content="software development, web development, AI solutions, Next.js, TypeScript, React, mobile apps, SaaS, custom software, Toronto software agency" />
