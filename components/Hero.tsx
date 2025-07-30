@@ -84,7 +84,7 @@ export default function Hero() {
             variants={itemVariants}
             className="text-xl md:text-2xl text-gray-300 mb-8 max-w-2xl mx-auto leading-relaxed"
           >
-            Modern software built with future-ready AI integrations
+            Building AI-first applications & intelligent automation solutions
             Built to adapt, designed to scale, made to last
           </motion.p>
           

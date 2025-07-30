@@ -14,11 +14,11 @@ export default function Footer() {
   const currentYear = new Date().getFullYear();
 
   const services = [
-    'Web Development',
-    'Mobile Apps',
-    'AI Integration',
-    'Custom Software',
-    'SaaS Solutions',
+    'GPT‑based assistants',
+    'Custom LLM chatbots',
+    'Predictive analytics tools',
+    'Computer vision/OCR',
+    'LLM fine-tuning',
     'Technical Consulting'
   ];
 
@@ -60,9 +60,10 @@ export default function Footer() {
             </div>
             
             <p className="text-gray-300 mb-6 text-lg leading-relaxed">
-              We transform innovative ideas into reality through premium software development. 
-              Specializing in AI-ready solutions, modern web applications, and scalable systems 
-              that drive business growth.
+            AI-Driven App Development & Intelligent Automation
+            Transform ideas into AI-powered products—chatbots, custom GPT agents, 
+            machine learning features, and predictive analytics built for scale.
+               
             </p>
             
             <div className="space-y-3">
