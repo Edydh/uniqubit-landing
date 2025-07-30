@@ -110,9 +110,10 @@ export default function About() {
                 transition={{ duration: 1, delay: 0.5 }}
                 viewport={{ once: true }}
               >
-                We are a forward-thinking development agency focused on elegant design, 
-                cutting-edge technology, and building AI-ready applications for startups, 
-                enterprises, and creators who think big.
+                At uniQubit, AI is not an afterthought—it’s core to every project.
+                From ideation to production, we build smart, autonomous applications that evolve with your business. 
+                
+                
               </motion.p>
               
               <motion.div 
